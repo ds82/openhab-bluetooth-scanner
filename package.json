@@ -1,0 +1,25 @@
+{
+  "name": "bluetooth-openhab-scanner",
+  "version": "1.0.0-beta.1",
+  "description": "openhab LE bluetooth scanner",
+  "main": "index.js",
+  "dependencies": {
+    "chalk": "1.1.3",
+    "noble": "1.7.0"
+  },
+  "devDependencies": {
+    "xo": "0.17.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "xo": {
+    "space": true,
+    "rules": {
+      "no-return-assign": 0
+    }
+  },
+  "keywords": [],
+  "author": "Dennis Sänger <npm16-bluetooth-openhab-scanner $$AT$$ mail.ds82.de>",
+  "license": "ISC"
+}
