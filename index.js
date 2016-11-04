@@ -7,11 +7,15 @@ const chalk = require('chalk');
 const noble = require('noble');
 const config = require('./config.json');
 
-const IDLE_UNTIL_REMOVE = 60 * 5;
-const REMOVE_CHECK_INTERVAL = 5000;
+const IDLE_UNTIL_REMOVE = 15; // 5 minutes
+const REMOVE_CHECK_INTERVAL = 5000; // 5 seconds
+
+const DEFAULT_OPTIONS = {
+  method: 'PUT'
+};
 
 const openhabURL = url.parse(config.openhab.url);
-let db = {};
+let db = Object.assign({}, config.beacons || {});
 
 function getTimestamp() {
   return Math.floor(new Date() / 1000);
@@ -46,7 +50,8 @@ function getItemFromDevice(device) {
   return current.item || false;
 }
 
-function pushState(item, state) {
+function pushState(item, state, _options) {
+  let options = Object.assign({}, DEFAULT_OPTIONS, _options);
   const isDataValid = (item && state !== undefined);
 
   return new Promise((resolve, reject) => {
@@ -54,16 +59,14 @@ function pushState(item, state) {
       return reject('data invalid');
     }
 
-    let thisRequest = Object.assign({}, openhabURL);
+    let thisRequest = Object.assign({}, options, openhabURL);
 
     thisRequest.path = `${openhabURL.path}rest/items/${item}/state`;
-    thisRequest.method = 'PUT';
-
     thisRequest.headers = thisRequest.headers || {};
     thisRequest.headers['Content-Type'] = 'text/plain';
     // thisRequest.headers['Content-Length'] = Buffer.byteLength(state);
 
-    //console.log(chalk.yellow('Make HTTP request..'), thisRequest, state);
+    console.log(chalk.yellow('Make HTTP request..'), thisRequest, state);
 
     let req = http.request(thisRequest, res => {
       res.setEncoding('utf8');
@@ -71,26 +74,34 @@ function pushState(item, state) {
     });
     req.write(state);
     req.end();
-    resolve();
+    return resolve();
   });
 }
 
 function startRemoveCheck() {
-  setInterval(() => {
-    let devices = Object.keys(db);
-    devices.forEach(device => {
-      if (isIdle(device)) {
-        let item = getItemFromDevice(device);
-        pushState(item, 'CLOSED')
-        .then(() => device.present = false);
-      }
-    });
-  }, REMOVE_CHECK_INTERVAL);
+  setInterval(removeIdle, REMOVE_CHECK_INTERVAL);
+}
+
+function iterateDevices(fn) {
+  let devices = Object.keys(db);
+  devices.forEach(uuid => fn(db[uuid]));
 }
 
 function isIdle(device) {
   const now = getTimestamp();
   return (now - device.lastSeen) > IDLE_UNTIL_REMOVE;
+}
+
+function removeIdle() {
+  iterateDevices(removeIdleDevice);
+}
+
+function removeIdleDevice(device) {
+  device.lastSeen = device.lastSeen || 0;
+  if (isIdle(device)) {
+    let item = getItemFromDevice(device);
+    pushState(item, 'CLOSED');
+  }
 }
 
 noble.on('stateChange', state => {
