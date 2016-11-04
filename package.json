@@ -8,13 +8,16 @@
     "noble": "1.7.0"
   },
   "devDependencies": {
+    "jest": "16.0.2",
+    "jest-cli": "16.0.2",
     "xo": "0.17.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "xo": {
     "space": true,
+    "envs": ["jasmine", "jest"],
     "rules": {
       "no-return-assign": 0
     }
