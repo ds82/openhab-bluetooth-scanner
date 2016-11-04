@@ -31,17 +31,19 @@ function enablePresent(device) {
   let item = getItemFromDevice(device);
 
   if (device.present !== true && item) {
-    console.log(chalk.green('FOUND'), device.uuid, item);
+    console.log(chalk.green('FOUND'), device.uuid, device.present, item);
     pushState(item, 'OPEN')
     .then(() => device.present = true)
     .catch(err => console.log(chalk.red('ERROR:'), err), device.present = false);
-  } else if (!item) {
-    console.log(chalk.orange('Found unkown device:'), device.uuid);
+  } else if (!item && !device.unkown) {
+    console.log(chalk.red('Found unkown device:'), device.uuid);
+    device.unkown = true;
   }
 }
 
 function getItemFromDevice(device) {
-  return config.beacons[(device.uuid)] || false;
+  let current = config.beacons[(device.uuid)] || {};
+  return current.item || false;
 }
 
 function pushState(item, state) {
@@ -61,7 +63,7 @@ function pushState(item, state) {
     thisRequest.headers['Content-Type'] = 'text/plain';
     // thisRequest.headers['Content-Length'] = Buffer.byteLength(state);
 
-    // console.log(chalk.yellow('Make HTTP request..'), thisRequest, state);
+    //console.log(chalk.yellow('Make HTTP request..'), thisRequest, state);
 
     let req = http.request(thisRequest, res => {
       res.setEncoding('utf8');
@@ -69,6 +71,7 @@ function pushState(item, state) {
     });
     req.write(state);
     req.end();
+    resolve();
   });
 }
 
