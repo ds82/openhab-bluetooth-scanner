@@ -33,8 +33,7 @@ function touch(device) {
 
 function enablePresent(device) {
   let item = getItemFromDevice(device);
-
-  if (device.present !== true && item) {
+  if (shouldEnableDevice(device) && item) {
     console.log(chalk.green('FOUND'), device.uuid, device.present, item);
     pushState(item, 'OPEN')
     .then(() => device.present = true)
@@ -43,6 +42,10 @@ function enablePresent(device) {
     console.log(chalk.red('Found unkown device:'), device.uuid);
     device.unkown = true;
   }
+}
+
+function shouldEnableDevice(device) {
+  return device.present !== true || isIdle(device);
 }
 
 function getItemFromDevice(device) {
@@ -89,7 +92,8 @@ function iterateDevices(fn) {
 
 function isIdle(device) {
   const now = getTimestamp();
-  return (now - device.lastSeen) > IDLE_UNTIL_REMOVE;
+  let lastSeen = device.lastSeen || 0;
+  return (now - lastSeen) > IDLE_UNTIL_REMOVE;
 }
 
 function removeIdle() {
