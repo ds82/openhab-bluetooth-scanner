@@ -104,7 +104,8 @@ function removeIdleDevice(device) {
   device.lastSeen = device.lastSeen || 0;
   if (isIdle(device)) {
     let item = getItemFromDevice(device);
-    pushState(item, 'CLOSED');
+    pushState(item, 'CLOSED')
+      .then(() => device.present = false);
   }
 }
 
