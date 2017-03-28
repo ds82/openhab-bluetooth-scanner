@@ -105,7 +105,8 @@ function removeIdleDevice(device) {
   if (isIdle(device)) {
     let item = getItemFromDevice(device);
     pushState(item, 'CLOSED')
-      .then(() => device.present = false);
+      .then(() => device.present = false)
+      .catch(() => {}); // this error is ignored
   }
 }
 
